@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+.uv-cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+.DS_Store
+
+# Local leftovers from the primitives showcase, which moved to the docs repo.
+# The directory itself is gone from this tree, and it took its own .gitignore
+# with it, so without this line a `git add -A` sweeps in hundreds of MB of
+# generated .stl and .png that were only ever build output.
+primitives_showcase/
+.env
+.env.*
+!.env.example

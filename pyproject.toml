@@ -1,0 +1,169 @@
+[project]
+name = "sdm-view"
+version = "0.0.0"
+description = "Shared Blender authoring and visualization layer for Software Defined Matter CEMs: a bidirectional bridge between JAX SDF cores and Blender, with parameter sliders, cutaway views, and a VDB-first geometry pipeline."
+readme = "README.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+authors = [{ name = "Emergent Matter" }]
+keywords = [
+    "blender",
+    "sdf",
+    "signed-distance-field",
+    "cad",
+    "openvdb",
+    "software-defined-matter",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/EmergentMatter/emergent-matter-sdm-view"
+Repository = "https://github.com/EmergentMatter/emergent-matter-sdm-view"
+Issues = "https://github.com/EmergentMatter/emergent-matter-sdm-view/issues"
+Changelog = "https://github.com/EmergentMatter/emergent-matter-sdm-view/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sdm_view"]
+
+[tool.hatch.build]
+# An allowlist, so the sdist carries the package sources and the data files the
+# wheel ships, and nothing else: no tests, CI config, agent guidance or lock file
+# goes onto the public index.
+include = [
+    "src/sdm_view/**/*.py",
+    "src/sdm_view/py.typed",
+    "src/sdm_view/blender/viewer/README.md",
+    "src/sdm_view/blender/viewer/shader_template.glsl",
+]
+
+# `uv sync --locked` (what CI runs in every job) installs [dependency-groups],
+# not [project.optional-dependencies] -- the latter needs --extra/--all-extras.
+# Dev tooling has to live here or the lint/format/typecheck jobs fail to spawn
+# their own tools.
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.16",
+    "mypy>=1.14",
+]
+
+# sdm-core is deliberately NOT declared here, as a dependency or a path
+# source, even though tests/test_sdm_core_conformance.py needs it.
+#
+# The conformance tests skip unless sdm-core is importable. Install it
+# into this venv from the package index to run them:
+#
+#     uv pip install emergent-matter-sdm-core --index https://get.softwaredefinedmatter.com/simple
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = ["error"]   # per-repo ignores are explicit entries
+
+# ── towncrier: turns changelog.d/ notes into CHANGELOG.md ─────────────────
+#
+# Exactly three fragment types, matching the three bump levels the release
+# workflow understands (see EmergentMatter/actions CONTRACT.md). Do not add
+# a fourth type: compute_bump.py only recognizes major/minor/patch and
+# exits 1 on anything else.
+[tool.towncrier]
+directory = "changelog.d"          # where `uv run scripts/changeset.py` writes notes
+filename = "CHANGELOG.md"
+# Insert this marker into CHANGELOG.md once, above your existing history.
+# towncrier writes new release sections directly below it and never touches
+# anything beneath: see EmergentMatter/actions docs/onboarding.md for
+# inserting it into a hand-written changelog without disturbing history.
+start_string = "<!-- towncrier release notes start -->\n"
+title_format = "## {version} ({project_date})"
+underlines = ["-", "~", "^"]
+
+[[tool.towncrier.type]]
+directory = "major"
+name = "Major"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "minor"
+name = "Minor"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "patch"
+name = "Patch"
+showcontent = true
+
+# ── em-release: tells sync_version.py every place the version string lives ──
+#
+# One entry per "path:symbol" location, beyond `[project] version` itself
+# (that one is handled separately, by `uv version --bump` in the release
+# workflow; do not list it here).
+#
+# Every location you list gets written on every release. Anything you don't
+# list is never touched: that's deliberate, so a data/schema version that
+# is meant to move independently of the package version is safe just by
+# being left off this list. See EmergentMatter/actions docs/onboarding.md
+# for the emergent-matter-sdm-materials worked example, where
+# __catalog_version__ *is*
+# listed because it's meant to track the package version in lockstep.
+[tool.em-release]
+tier = "open"
+templates_version = "v1.15.0"
+version_files = [
+  "src/sdm_view/__init__.py:__version__",
+]
+
+# ── mypy ────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.13"
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+# Per-module relaxation for bpy-bound code, never project-wide. bpy's own
+# API has no publicly-typed stubs this repo declares as a dependency
+# (Blender bundles its own Python -- see CLAUDE.md's "bpy dependency is
+# implicit"), so every function signature in the blender/ subpackage would
+# otherwise need an untyped bpy.types.* annotation mypy can't check anyway.
+# io/ stays under the strict default: it's pure Python, no bpy in sight.
+[[tool.mypy.overrides]]
+module = ["sdm_view.blender.*"]
+disallow_untyped_defs = false
+
+# Only the untyped deps this repo actually imports, all Blender-bundled or
+# Blender-adjacent (no pip-installable typed stubs on PyPI for any of them).
+# Adopting real typed stubs (fake-bpy-module) instead of this override is a
+# deliberately deferred, separate initiative: about 170 errors surface under
+# real stubs, which is why they are out of scope here.
+[[tool.mypy.overrides]]
+module = [
+  "bpy",
+  "bpy.*",
+  "bpy_extras.*",
+  "bmesh",
+  "mathutils",
+  "gpu",
+  "gpu.*",
+  "gpu_extras.*",
+  "bgl",
+  "openvdb",
+]
+ignore_missing_imports = true

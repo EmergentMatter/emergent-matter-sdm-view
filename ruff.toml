@@ -1,0 +1,8 @@
+# Local rule additions and overrides go here, never in ruff-base.toml.
+
+extend = "ruff-base.toml"
+
+# [lint.per-file-ignores]
+# "src/pkg/catalog/*.py" = ["E501"]   # hand-aligned data literals
+
+# target-version = "py311"   # only on the Python 3.11 floor
