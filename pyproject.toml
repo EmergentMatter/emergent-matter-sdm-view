@@ -1,6 +1,6 @@
 [project]
 name = "sdm-view"
-version = "0.0.0"
+version = "1.0.0"
 description = "Shared Blender authoring and visualization layer for Software Defined Matter CEMs: a bidirectional bridge between JAX SDF cores and Blender, with parameter sliders, cutaway views, and a VDB-first geometry pipeline."
 readme = "README.md"
 requires-python = ">=3.13"

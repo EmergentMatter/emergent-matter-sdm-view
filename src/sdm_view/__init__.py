@@ -8,4 +8,4 @@ The public surface is split:
 See `CLAUDE.md` for the feature module map.
 """
 
-__version__ = "0.0.0"
+__version__ = "1.0.0"
