@@ -18,3 +18,7 @@ primitives_showcase/
 .env
 .env.*
 !.env.example
+
+# Local graphify tool artifacts (never part of the repo)
+.graphify/
+.graphifyy/
